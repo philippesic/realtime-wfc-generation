@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,10 +11,6 @@ public class Player : MonoBehaviour
 
     private const int cameraTiles = 16;
 
-    private const int padding = 1;
-
-    private const int totalTiles = cameraTiles + padding * 2;
-
 
     private Vector2Int currentVisibleOrigin;
 
@@ -24,6 +19,8 @@ public class Player : MonoBehaviour
 
     [SerializeField] private int regenCooldownFrames = 0;
     private int regenCooldownCounter = 0;
+
+    private Vector2 lastMoveDir;
 
     void Start()
     {
@@ -35,18 +32,16 @@ public class Player : MonoBehaviour
             return;
         }
 
+        wfcGenerator.baseVisibleSize = cameraTiles;
+        wfcGenerator.ConfigureBaseDimensions();
 
-        wfcGenerator.width = totalTiles;
-        wfcGenerator.depth = totalTiles;
+        Vector3 camPos = mainCamera.transform.position;
+        currentVisibleOrigin = new Vector2Int(
+            Mathf.FloorToInt(camPos.x - cameraTiles * 0.5f),
+            Mathf.FloorToInt(camPos.y - cameraTiles * 0.5f)
+        );
 
-        Vector2 camPos = mainCamera.transform.position;
-        lastCameraCell = new Vector2Int(Mathf.FloorToInt(camPos.x), Mathf.FloorToInt(camPos.y));
-
-        currentVisibleOrigin = lastCameraCell - new Vector2Int(cameraTiles / 2, cameraTiles / 2);
-
-
-        Vector2Int paddedWindowOrigin = currentVisibleOrigin - new Vector2Int(padding, padding);
-        wfcGenerator.GenerateInitialFullWindow(paddedWindowOrigin);
+        wfcGenerator.GenerateInitialFullWindow(currentVisibleOrigin);
     }
 
     void Update()
@@ -64,14 +59,21 @@ public class Player : MonoBehaviour
         float moveX = Input.GetAxisRaw("Horizontal");
         float moveY = Input.GetAxisRaw("Vertical");
         Vector2 dir = new Vector2(moveX, moveY).normalized;
-        if (dir.sqrMagnitude > 0f)
+
+        if (dir.sqrMagnitude > 0.0001f)
+        {
+            lastMoveDir = dir;
             transform.position += (Vector3)(dir * moveSpeed * Time.deltaTime);
 
 
-        if (mainCamera)
-        {
-            Vector3 cam = mainCamera.transform.position;
-            mainCamera.transform.position = new Vector3(transform.position.x, transform.position.y, cam.z);
+            if (mainCamera)
+            {
+                Vector3 cam = mainCamera.transform.position;
+                mainCamera.transform.position = new Vector3(transform.position.x, transform.position.y, cam.z);
+            }
+
+
+            wfcGenerator.EnsureDirectionalExtension(dir);
         }
     }
 
@@ -84,22 +86,14 @@ public class Player : MonoBehaviour
         }
 
         Vector3 camPos = mainCamera.transform.position;
-        Vector2Int camCell = new Vector2Int(Mathf.FloorToInt(camPos.x), Mathf.FloorToInt(camPos.y));
-        if (camCell == lastCameraCell) return;
-
-        lastCameraCell = camCell;
-
-
-        Vector2Int desiredVisibleOrigin = camCell - new Vector2Int(cameraTiles / 2, cameraTiles / 2);
-
-
+        Vector2Int desiredVisibleOrigin = new Vector2Int(
+            Mathf.FloorToInt(camPos.x - cameraTiles * 0.5f),
+            Mathf.FloorToInt(camPos.y - cameraTiles * 0.5f)
+        );
         if (desiredVisibleOrigin == currentVisibleOrigin) return;
 
+        wfcGenerator.SlideCommit(currentVisibleOrigin, desiredVisibleOrigin);
         currentVisibleOrigin = desiredVisibleOrigin;
-        Vector2Int paddedWindowOrigin = currentVisibleOrigin - new Vector2Int(padding, padding);
-
-
-        wfcGenerator.RegenerateAt(paddedWindowOrigin);
 
         if (regenCooldownFrames > 0)
             regenCooldownCounter = regenCooldownFrames;

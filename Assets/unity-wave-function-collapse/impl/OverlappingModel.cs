@@ -8,6 +8,7 @@ The software is provided "as is", without warranty of any kind, express or impli
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 class OverlappingModel : Model
@@ -202,5 +203,36 @@ class OverlappingModel : Model
 
 			Propagate();
 		}
+	}
+
+	// Alloc & clear base arrays (calls private Init/Clear via reflection once)
+	void PrepareForConstraints()
+	{
+		if (wave != null && init) return;
+		var tModel = typeof(Model);
+		var miInit = tModel.GetMethod("Init", BindingFlags.Instance | BindingFlags.NonPublic);
+		var miClear = tModel.GetMethod("Clear", BindingFlags.Instance | BindingFlags.NonPublic);
+		if (wave == null) miInit?.Invoke(this, null);
+		if (!init)
+		{
+			miClear?.Invoke(this, null);
+			init = true;
+		}
+	}
+
+	// Constrain a cell so only patterns whose anchor color equals 'colorIndex' remain
+	public void ConstrainColor(int x, int y, byte colorIndex)
+	{
+		if (x < 0 || y < 0 || x >= FMX || y >= FMY) return;
+		PrepareForConstraints();
+		int idx = x + y * FMX;
+		for (int t = 0; t < T; t++)
+		{
+			if (patterns[t][0] != colorIndex && wave[idx][t])
+			{
+				Ban(idx, t);
+			}
+		}
+		Propagate();
 	}
 }
