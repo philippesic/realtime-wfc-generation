@@ -250,7 +250,7 @@ class OverlapWFC : MonoBehaviour
 		if (!ok)
 		{
 			// Fallback
-			Debug.LogWarning("SlideWithConstraints: contradiction – regenerating without constraints.");
+			Debug.LogWarning("SlideWithConstraints: contradiction regenerating without constraints.");
 			RegenerateAt(newPaddedOrigin);
 			return;
 		}
@@ -362,69 +362,90 @@ class OverlapWFC : MonoBehaviour
 	{
 		if (model == null || movementDir.sqrMagnitude < 0.0001f) return;
 
-		Vector2 prevDir = currentMovementDir;
-
 		currentMovementDir = movementDir.normalized;
 
-		if (movementDir.x > 0.2f && !extRight)
+		if (movementDir.x > 0.2f && !extRight) ExtendRight();
+		if (movementDir.x < -0.2f && !extLeft) ExtendLeft();
+		if (movementDir.y > 0.2f && !extUp) ExtendUp();
+		if (movementDir.y < -0.2f && !extDown) ExtendDown();
+
+		var cam = Camera.main;
+		if (cam == null) return;
+
+		// Only remove once the entire extension is off-screen
+		TryRemoveRight(cam);
+		TryRemoveLeft(cam);
+		TryRemoveUp(cam);
+		TryRemoveDown(cam);
+	}
+
+	void TryRemoveRight(Camera cam)
+	{
+		if (!extRight) return;
+		float camHalfH = cam.orthographicSize;
+		float camHalfW = camHalfH * cam.aspect;
+		float camMaxX = cam.transform.position.x + camHalfW;
+
+		// Left edge of rightmost column
+		float rightmostLeft = windowOrigin.x + (VisibleWidth - 1);
+		if (rightmostLeft >= camMaxX)
 		{
-			ExtendRight();
-			Debug.Log($"Extended right: width={width}, VisibleWidth={VisibleWidth}");
+			var colors = CaptureColors(width, depth, windowOrigin);
+			width -= 1;
+			extRight = false;
+			RebuildModelPreserving(colors, windowOrigin);
 		}
+	}
 
-		if (movementDir.x < -0.2f && !extLeft)
+	void TryRemoveLeft(Camera cam)
+	{
+		if (!extLeft) return;
+		float camHalfH = cam.orthographicSize;
+		float camHalfW = camHalfH * cam.aspect;
+		float camMinX = cam.transform.position.x - camHalfW;
+
+		// Right edge of leftmost column
+		float leftmostRight = windowOrigin.x + 1f;
+		if (leftmostRight <= camMinX)
 		{
-			ExtendLeft();
-			Debug.Log($"Extended left: width={width}, VisibleWidth={VisibleWidth}");
+			var colors = CaptureColors(width, depth, windowOrigin);
+			width -= 1;
+			extLeft = false;
+			Vector2Int newOrigin = new Vector2Int(windowOrigin.x + 1, windowOrigin.y);
+			RebuildModelPreserving(colors, newOrigin);
 		}
+	}
 
-		if (movementDir.y > 0.2f && !extUp)
+	void TryRemoveUp(Camera cam)
+	{
+		if (!extUp) return;
+		float camHalfH = cam.orthographicSize;
+		float camMaxY = cam.transform.position.y + camHalfH;
+
+		float topBottomEdge = windowOrigin.y + (VisibleHeight - 1);
+		if (topBottomEdge >= camMaxY)
 		{
-			ExtendUp();
-			Debug.Log($"Extended up: depth={depth}, VisibleHeight={VisibleHeight}");
+			var colors = CaptureColors(depth, depth, windowOrigin);
+			depth -= 1;
+			extUp = false;
+			RebuildModelPreserving(colors, windowOrigin);
 		}
+	}
 
-		if (movementDir.y < -0.2f && !extDown)
+	void TryRemoveDown(Camera cam)
+	{
+		if (!extDown) return;
+		float camHalfH = cam.orthographicSize;
+		float camMinY = cam.transform.position.y - camHalfH;
+
+		float bottomTopEdge = windowOrigin.y + 1f;
+		if (bottomTopEdge <= camMinY)
 		{
-			ExtendDown();
-			Debug.Log($"Extended down: depth={depth}, VisibleHeight={VisibleHeight}");
-		}
-
-		// Only reset extensions when completely out of view
-		Camera cam = Camera.main;
-		if (cam != null)
-		{
-			Vector2 camPos = new Vector2(cam.transform.position.x, cam.transform.position.y);
-			float visibleHalfWidth = baseVisibleSize * 0.5f;
-			float visibleHalfHeight = baseVisibleSize * 0.5f;
-
-			if (extRight && windowOrigin.x + VisibleWidth < camPos.x - visibleHalfWidth)
-			{
-				extRight = false;
-				width = baseWidth + (extLeft ? 1 : 0);
-				Debug.Log("Reset right extension - out of view");
-			}
-
-			if (extLeft && windowOrigin.x > camPos.x + visibleHalfWidth)
-			{
-				extLeft = false;
-				width = baseWidth + (extRight ? 1 : 0);
-				Debug.Log("Reset left extension - out of view");
-			}
-
-			if (extUp && windowOrigin.y + VisibleHeight < camPos.y - visibleHalfHeight)
-			{
-				extUp = false;
-				depth = baseHeight + (extDown ? 1 : 0);
-				Debug.Log("Reset up extension - out of view");
-			}
-
-			if (extDown && windowOrigin.y > camPos.y + visibleHalfHeight)
-			{
-				extDown = false;
-				depth = baseHeight + (extUp ? 1 : 0);
-				Debug.Log("Reset down extension - out of view");
-			}
+			var colors = CaptureColors(width, depth, windowOrigin);
+			depth -= 1;
+			extDown = false;
+			Vector2Int newOrigin = new Vector2Int(windowOrigin.x, windowOrigin.y + 1);
+			RebuildModelPreserving(colors, newOrigin);
 		}
 	}
 
@@ -445,8 +466,6 @@ class OverlapWFC : MonoBehaviour
 		var colors = CaptureColors(width, depth, windowOrigin);
 		width += 1;
 		extRight = true;
-		Debug.Log($"ExtendRight: width={width}, VisibleWidth={VisibleWidth}");
-
 		RebuildModelPreserving(colors, windowOrigin);
 	}
 
