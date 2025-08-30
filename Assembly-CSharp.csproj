@@ -64,19 +64,19 @@
     <Analyzer Include="/Applications/Unity/Hub/Editor/2022.3.62f1/Unity.app/Contents/Tools/Unity.SourceGenerators/Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets/unity-wave-function-collapse/impl/OverlappingModel.cs" />
-    <Compile Include="Assets/Player.cs" />
-    <Compile Include="Assets/unity-wave-function-collapse/OverlapWFC.cs" />
-    <Compile Include="Assets/Terrain/Tile.cs" />
-    <Compile Include="Assets/unity-wave-function-collapse/SimpleTiledWFC.cs" />
-    <Compile Include="Assets/unity-wave-function-collapse/impl/Stuff.cs" />
-    <Compile Include="Assets/unity-wave-function-collapse/Training.cs" />
-    <Compile Include="Assets/unity-wave-function-collapse/impl/Model.cs" />
-    <Compile Include="Assets/unity-wave-function-collapse/TilePainter.cs" />
-    <Compile Include="Assets/unity-wave-function-collapse/impl/SimpleTiledModel.cs" />
+    <Compile Include="Assets/realtime-wfc-generation/unity-wave-function-collapse/impl/OverlappingModel.cs" />
+    <Compile Include="Assets/realtime-wfc-generation/unity-wave-function-collapse/impl/Stuff.cs" />
+    <Compile Include="Assets/realtime-wfc-generation/unity-wave-function-collapse/TilePainter.cs" />
+    <Compile Include="Assets/realtime-wfc-generation/unity-wave-function-collapse/impl/Model.cs" />
+    <Compile Include="Assets/realtime-wfc-generation/Player.cs" />
+    <Compile Include="Assets/realtime-wfc-generation/unity-wave-function-collapse/OverlapWFC.cs" />
+    <Compile Include="Assets/realtime-wfc-generation/Terrain/Scripts/Tile.cs" />
+    <Compile Include="Assets/realtime-wfc-generation/unity-wave-function-collapse/SimpleTiledWFC.cs" />
+    <Compile Include="Assets/realtime-wfc-generation/unity-wave-function-collapse/Training.cs" />
+    <Compile Include="Assets/realtime-wfc-generation/unity-wave-function-collapse/impl/SimpleTiledModel.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets/unity-wave-function-collapse/LICENSE.txt" />
+    <None Include="Assets/realtime-wfc-generation/unity-wave-function-collapse/LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
