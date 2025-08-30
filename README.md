@@ -4,7 +4,7 @@ Wave Function Collapse generated tile world around a moving camera in real time.
 
 ---
 
-## What This Is
+## Breakdown
 
 A Unity project that:
 
@@ -37,6 +37,8 @@ A Unity project that:
 5. Press Play:
    - Move with WASD / Arrow keys.
    - Tiles generate around you.
+  
+Also see [SelfSame's post](https://selfsame.itch.io/unitywfc) for general wfc setup.
 
 ---
 
@@ -80,6 +82,6 @@ Assets/
 
 ## License
 
-Base overlapping WFC algorithm: MIT (original mxgmn). This project code modifications: MIT.
+Base overlapping WFC algorithm: mxgmn. Unity Implementation: selfsame. This project code modifications: MIT.
 
 ---
